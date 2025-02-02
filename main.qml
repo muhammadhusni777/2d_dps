@@ -22,7 +22,7 @@ Window {
 	x : 300
 	y : 50
 	width: 800
-	
+	maximumWidth : 800
     height: 650
 	
 	title:"map kosong"
@@ -43,7 +43,10 @@ Window {
             checked: false
            
 		   onClicked:{
-						
+						sp_lat_val = sp_lat.text
+						sp_lon_val = sp_lon.text
+
+					
 					}
 			
         }
@@ -135,6 +138,47 @@ Window {
                 font.bold: true
             }
 			
+			
+	TextField{
+					id : wind_speed
+					x : 600
+					y : 250
+					text : "1"
+					width : 120
+					
+					Text{
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : -80
+						y:10
+						text:"wind speed : "
+						color : "white"
+						font.family: "Cantora One"  // Set the font family
+						font.pixelSize: 15    // Set the font size
+						font.bold: true 
+					}
+				}
+				
+	TextField{
+					id : wind_dir
+					x : 600
+					y : 300
+					text :"90"
+					width : 120
+					
+					Text{
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : -80
+						y:10
+						text:"wind dir : "
+						color : "white"
+						font.family: "Cantora One"  // Set the font family
+						font.pixelSize: 15    // Set the font size
+						font.bold: true 
+					}
+				}
+			
+		
+			
 	
 	Text {
                 
@@ -150,7 +194,110 @@ Window {
                 font.family: "Verdana"
                 font.bold: true
             }
-			
+	Rectangle{
+		x : 510
+		y : 400
+		width : 250
+		height : 50
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		
+		Text {
+                
+                x: 10
+                y: 10
+                color: "white"
+                text: "Propeller 1"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                font.family: "Verdana"
+                font.bold: true
+            }
+		
+	
+	}
+
+	Rectangle{
+		x : 510
+		y : 460
+		width : 250
+		height : 50
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		
+		Text {
+                
+                x: 10
+                y: 10
+                color: "white"
+                text: "Propeller 2"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                font.family: "Verdana"
+                font.bold: true
+            }
+		
+	
+	}
+
+
+
+	Rectangle{
+		x : 510
+		y : 520
+		width : 250
+		height : 50
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		
+		Text {
+                
+                x: 10
+                y: 10
+                color: "white"
+                text: "Propeller 3"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                font.family: "Verdana"
+                font.bold: true
+            }
+		
+	
+	}
+
+
+
+	Rectangle{
+		x : 510
+		y : 580
+		width : 250
+		height : 50
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		
+		Text {
+                
+                x: 10
+                y: 10
+                color: "white"
+                text: "Propeller 4"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                font.family: "Verdana"
+                font.bold: true
+            }
+		
+	
+	}
+
 
 
 	
@@ -493,6 +640,19 @@ Timer{
 			latitude_position_value.text = backend.latitude()
 			longitude_position_value.text = backend.longitude()
 			marker.rotation = backend.yaw()
+			
+		}
+
+}
+
+
+Timer{
+		id:animate
+		interval: 1000
+		repeat: true
+		running: true
+		onTriggered: {
+			backend.animate("tick")
 			
 		}
 

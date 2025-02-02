@@ -8,21 +8,45 @@ from PyQt5.QtQml import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtQuick import *  
 import sys
+from scipy.linalg import expm
 #----------------------------------------------------------------#
 
-import paho.mqtt.client as paho
+import numpy as np
 #broker="123.45.0.10"
-broker="127.0.0.1"
-port = 1883
+
 
 pubdelay = 2 #delay publish to all wind and engine box
 counter = 0
 
 
 latitude = -6.215861
+latitude_dot = 0.00001
 longitude = 107.803706
+longitude_dot = 0.00001
 yaw = 90
+yaw_dot = 1
 
+x_dot = 0
+y_dot = 0
+theta_dot = 0
+
+def rotation(x, y, theta):
+    j_theta = np.array([[np.cos(theta * float(np.pi/180)), -np.sin(theta * float(np.pi/180)), 0],
+              [np.sin(theta * float(np.pi/180)), np.cos(theta* float(np.pi/180)), 0],
+              [0, 0, 1]])
+    result = ((j_theta)@ np.array([[x],[y],[theta]]))
+    
+    x_accent = result[1]
+    y_accent = result[0]
+
+    return x_accent, y_accent
+
+
+def meter_conversion(lat1, long1, lat2, long2):
+    delta_lat = (lat1 - lat2)*111000
+    delta_lon = (long1 - long2)*111000
+    distance = sqrt(pow(delta_lat, 2) +  pow(delta_lon, 2))
+    return distance
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -47,6 +71,7 @@ C = np.block([
 ])
 D = np.zeros((3, 3))
 
+
 print("A")
 print(A)
 
@@ -59,6 +84,21 @@ print(C)
 
 print("D")
 print(D)
+
+
+# Interval waktu (s)
+T_s = 0.1  # contoh interval waktu diskrit
+
+# Mendiskretisasi matriks A dan B
+A_d = expm(A * T_s)  # Matriks A diskrit
+B_d = np.linalg.inv(A) @ (A_d - np.eye(A.shape[0])) @ B  # Matriks B diskrit
+C_d = C  # Matriks C tetap sama untuk diskrit
+D_d = D  # Matriks D tetap sama untuk diskrit
+
+print("Matriks A (diskrit):\n", A_d)
+print("Matriks B (diskrit):\n", B_d)
+
+
 
 ########## mengisi class table dengan instruksi pyqt5#############
 #----------------------------------------------------------------#
@@ -77,55 +117,34 @@ class table(QObject):
     @pyqtSlot(result=float)
     def longitude(self):return longitude
     
+    
+    @pyqtSlot(str)
+    def animate(self, message):
+        global latitude
+        global latitude_dot
+        global longitude
+        global longitude_dot
+        global yaw
+        global yaw_dot
+        
+        latitude = latitude + latitude_dot
+        longitude = longitude + longitude_dot
+        yaw = yaw + yaw_dot
+        
+    
     @pyqtSlot(result=float)
     def yaw(self):return yaw
     
     
 #----------------------------------------------------------------#
 
-def on_message(client, userdata, message):
-        msg = str(message.payload.decode("utf-8"))
-        t = str(message.topic)
-
-        if(msg[0] == 'c'):
-            val =  1
-        else:
-            val = (msg)
-
-        if (t == "lat"):
-            global latitude
-            latitude = float(msg)
-            print(latitude)
-            
-        if (t == "long"):
-            global longitude
-            longitude = float(msg)
-            
-        if (t == "yaw"):
-            global yaw
-            yaw = float(msg)
 
 
 
 ########## memanggil class table di mainloop######################
 #----------------------------------------------------------------#    
 if __name__ == "__main__":
-    ##Mosquitto Mqtt Configuration
-    client= paho.Client("GUI")
-    client.on_message=on_message
 
-    print("connecting to broker ",broker)
-    client.connect(broker,port)#connect
-    print(broker," connected")
-
-    
-    client.loop_start()
-    print("Subscribing")
-
-
-    client.subscribe("lat")
-    client.subscribe("long")
-    client.subscribe("yaw")
     main = table()
     
     
