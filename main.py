@@ -117,6 +117,10 @@ class table(QObject):
     @pyqtSlot(result=float)
     def longitude(self):return longitude
     
+    @pyqtSlot(str)
+    def state_space_run(self, message):
+        pass
+    
     
     @pyqtSlot(str)
     def animate(self, message):

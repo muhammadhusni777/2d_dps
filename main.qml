@@ -19,22 +19,33 @@ import QtQuick 2.7
 Window {
 	
 	id : root
-	x : 300
+	x : 30
 	y : 50
-	width: 800
-	maximumWidth : 800
-    height: 650
-	
-	title:"map kosong"
+	width: 1100
+	maximumWidth : 1100
+	minimumWidth : 1100
+    height: 700
+	maximumHeight : 700
+	minimumHeight : 700
+	title:"2D DPS SIMULATOR"
 	color : "black"
     visible: true
 
 	property real sp_lat_val: -6.215861 // Variabel latitude
     property real sp_lon_val: 107.803706 // Variabel longitude
 
+
+	Rectangle{
+		x : 850
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		height : 650
+		width : 300
+
 	Button {
            
-            x: 550
+            x: 0
             y: 170
             text : "set"
 			width: 170
@@ -54,7 +65,7 @@ Window {
 
 	Text {
                 
-                x: 550
+                x: 0
                 y: 10
                 width: 83
                 height: 21
@@ -69,7 +80,7 @@ Window {
 			
 	Text {
                 
-                x: 550
+                x: 0
                 y: 50
                 width: 83
                 height: 21
@@ -84,7 +95,7 @@ Window {
 			
 	TextField{
 					id : sp_lat
-					x : 600
+					x : 50
 					y : 80
 					text : "-6.215861"
 					width : 120
@@ -103,7 +114,7 @@ Window {
 				
 	TextField{
 					id : sp_lon
-					x : 600
+					x : 50
 					y : 120
 					text : "107.803706"
 					width : 120
@@ -125,7 +136,7 @@ Window {
 			
 	Text {
                 
-                x: 550
+                x: 0
                 y: 220
                 width: 83
                 height: 21
@@ -141,7 +152,7 @@ Window {
 			
 	TextField{
 					id : wind_speed
-					x : 600
+					x : 120
 					y : 250
 					text : "1"
 					width : 120
@@ -160,7 +171,7 @@ Window {
 				
 	TextField{
 					id : wind_dir
-					x : 600
+					x : 120
 					y : 300
 					text :"90"
 					width : 120
@@ -182,7 +193,7 @@ Window {
 	
 	Text {
                 
-                x: 550
+                x: 0
                 y: 350
                 width: 83
                 height: 21
@@ -194,8 +205,12 @@ Window {
                 font.family: "Verdana"
                 font.bold: true
             }
+	
+	
+	
+	
 	Rectangle{
-		x : 510
+		x : 0
 		y : 400
 		width : 250
 		height : 50
@@ -220,7 +235,7 @@ Window {
 	}
 
 	Rectangle{
-		x : 510
+		x : 0
 		y : 460
 		width : 250
 		height : 50
@@ -247,7 +262,7 @@ Window {
 
 
 	Rectangle{
-		x : 510
+		x : 0
 		y : 520
 		width : 250
 		height : 50
@@ -274,7 +289,7 @@ Window {
 
 
 	Rectangle{
-		x : 510
+		x : 0
 		y : 580
 		width : 250
 		height : 50
@@ -301,7 +316,28 @@ Window {
 
 
 	
-	Rectangle {
+	
+	Button {
+            id: controller_setup
+            x: 10
+            y: 90
+            text : "controller setup"
+			//width: 34
+            //height: 31
+            checkable: false
+            checked: false
+			visible : false
+		   onClicked:{
+						
+					}
+			
+        }
+ 
+
+}
+
+
+Rectangle {
             id: map1
             x: 0
             y: 0
@@ -613,23 +649,7 @@ Window {
 
 	
 	}
-	
-	Button {
-            id: controller_setup
-            x: 10
-            y: 90
-            text : "controller setup"
-			//width: 34
-            //height: 31
-            checkable: false
-            checked: false
-           
-		   onClicked:{
-						
-					}
-			
-        }
-    
+	 
 		
 Timer{
 		id:guitimer
