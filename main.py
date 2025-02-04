@@ -12,8 +12,6 @@ from scipy.linalg import expm
 #----------------------------------------------------------------#
 
 import numpy as np
-#broker="123.45.0.10"
-
 
 pubdelay = 2 #delay publish to all wind and engine box
 counter = 0
@@ -53,14 +51,64 @@ import matplotlib.pyplot as plt
 from scipy.signal import lti, lsim
 
 # Parameter sistem
+'''
 m = np.array([[2.0, 0.1, 0.2], [0.1, 2.5, 0.3], [0.2, 0.3, 3.0]])  # matriks massa (3x3)
 c = np.array([[0.5, 0.1, 0.0], [0.1, 0.6, 0.2], [0.0, 0.2, 0.7]])  # matriks redaman (3x3)
 d = np.array([[0.2, 0.0, 0.1], [0.0, 0.3, 0.0], [0.1, 0.0, 0.4]])  # matriks gesekan (3x3)
+'''
+
+############ Model Kinetik ################################
+
+print("==== Kinetik =======")
+xg = 0.5 #posisi x center of gravity
+yg = 0.4 #posisi y center of gravity
+m = 27 #massa kapal
+r = 0 #posisi arah surge / kecepatan sudut (psi_dot)
+Iz = 0 #momen inersia akibat percepatan sumbu y
+
+x_u = 0.9
+y_v = 0.6
+n_r = 0.3
+y_r = 0.1
+n_v = 0.2
+
+x_udot = 0.9
+y_vdot = 0.6
+y_rdot = 0.7
+n_vdot = 0.3
+n_rdot = 0.4
+u = 0
+v = 0
+r = 0
+
+
+#gaya akibat massa
+
+'''
+#dari thesis teguh
+
+m = np.array([[m, 0, -m*yg], [0, m, m*xg], [-m*yg, m*xg, Iz]])
++ np.array([[-x_udot,0,0],[0,-y_vdot,-y_rdot],[0,-n_vdot,-n_rdot]])
+print(m)
+'''
+#dari Thomas P. DeRensis
+m = np.array([[m, -0.003, 0.001], [0.002, m, m*xg], [-0.005, m*xg, Iz]])
++ np.array([[-x_udot,-0.002,0.003],[-0.003,y_vdot,y_rdot],[-0.001,n_vdot,n_rdot]])
+print(m)
+
+#gaya akibat drag
+d = np.array([[x_u,-0.004,-0.002],
+    [-0.003,y_v,y_r],
+    [-0.001,n_v,n_r]]) 
+
+print("d",d)
+
+
 
 # Matriks State-Space
 A = np.block([
     [np.zeros((3, 3)), np.eye(3)],
-    [-np.linalg.inv(m) @ c, -np.linalg.inv(m) @ d]
+    [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
 ])
 B = np.block([
     [np.zeros((3, 3))],
@@ -71,9 +119,12 @@ C = np.block([
 ])
 D = np.zeros((3, 3))
 
+x = np.array([[0], [0], [0], [0], [0], [0]]) 
+U = np.array([[0.0001], [0], [0]])
+
 
 print("A")
-print(A)
+print(str(A))
 
 print("B")
 print(B)
@@ -85,18 +136,21 @@ print(C)
 print("D")
 print(D)
 
-
-# Interval waktu (s)
-T_s = 0.1  # contoh interval waktu diskrit
-
 # Mendiskretisasi matriks A dan B
-A_d = expm(A * T_s)  # Matriks A diskrit
-B_d = np.linalg.inv(A) @ (A_d - np.eye(A.shape[0])) @ B  # Matriks B diskrit
-C_d = C  # Matriks C tetap sama untuk diskrit
-D_d = D  # Matriks D tetap sama untuk diskrit
+# Matriks identitas
+I = np.eye(A.shape[0])
+T = 1
 
-print("Matriks A (diskrit):\n", A_d)
-print("Matriks B (diskrit):\n", B_d)
+# Menghitung Ad dan Bd dengan Tustin
+Ad = np.linalg.inv(I - (T/2) * A) @ (I + (T/2) * A)
+Bd = np.linalg.inv(I - (T/2) * A) @ (T * B)
+
+# Cd dan Dd tetap sama
+Cd = C
+Dd = D
+
+print("Matriks A (diskrit):\n", Ad)
+print("Matriks B (diskrit):\n", Bd)
 
 
 
@@ -112,10 +166,10 @@ class table(QObject):
         sys.exit(self.app.exec_())
         
     @pyqtSlot(result=float)
-    def latitude(self):return latitude
+    def latitude(self):return round(latitude,7)
     
     @pyqtSlot(result=float)
-    def longitude(self):return longitude
+    def longitude(self):return round(longitude,7)
     
     @pyqtSlot(str)
     def state_space_run(self, message):
@@ -138,6 +192,23 @@ class table(QObject):
     
     @pyqtSlot(result=float)
     def yaw(self):return yaw
+    
+    @pyqtSlot(result=str)
+    def A_ss(self):return str(Ad)
+    
+    @pyqtSlot(result=str)
+    def B_ss(self):return str(Bd)
+    
+    @pyqtSlot(result=str)
+    def C_ss(self):return str(Cd)
+    
+    
+    @pyqtSlot(result=str)
+    def x_ss(self):return str(x)
+    
+    
+    @pyqtSlot(result=str)
+    def u_ss(self):return str(U)
     
     
 #----------------------------------------------------------------#

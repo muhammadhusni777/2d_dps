@@ -20,15 +20,15 @@ Window {
 	
 	id : root
 	x : 30
-	y : 50
-	width: 1100
-	maximumWidth : 1100
-	minimumWidth : 1100
+	y : 30
+	width: 1150
+	maximumWidth : 1200
+	minimumWidth : 1200
     height: 700
 	maximumHeight : 700
 	minimumHeight : 700
-	title:"2D DPS SIMULATOR"
-	color : "black"
+	title:"2D DPS CONTROLLER SIMULATOR"
+	color : "#389BF2"
     visible: true
 
 	property real sp_lat_val: -6.215861 // Variabel latitude
@@ -36,16 +36,16 @@ Window {
 
 
 	Rectangle{
-		x : 850
+		x : 950
 		color : "transparent"
 		border.width : 3
 		border.color : "white"
 		height : 650
-		width : 300
+		width : 250
 
 	Button {
            
-            x: 0
+            x: 10
             y: 170
             text : "set"
 			width: 170
@@ -64,23 +64,22 @@ Window {
 
 
 	Text {
-                
-                x: 0
-                y: 10
-                width: 83
-                height: 21
-                color: "white"
-                text: "2d DPS SIMULATOR"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
+		anchors.horizontalCenter: parent.horizontalCenter
+		y : 20
+		width: 83
+		height: 21
+		color: "white"
+		text: "2D DPS CONTROLLER\nSIMULATOR"
+		font.pixelSize: 14
+		horizontalAlignment: Text.AlignHCenter
+		verticalAlignment: Text.AlignVCenter
+		font.family: "Verdana"
+		font.bold: true
+	}
 			
 	Text {
                 
-                x: 0
+                x: 10
                 y: 50
                 width: 83
                 height: 21
@@ -95,7 +94,7 @@ Window {
 			
 	TextField{
 					id : sp_lat
-					x : 50
+					x : 60
 					y : 80
 					text : "-6.215861"
 					width : 120
@@ -104,7 +103,7 @@ Window {
 						//anchors.horizontalCenter: parent.horizontalCenter
 						x : -50
 						y:10
-						text:"sp lat : "
+						text:"lat : "
 						color : "white"
 						font.family: "Cantora One"  // Set the font family
 						font.pixelSize: 15    // Set the font size
@@ -114,7 +113,7 @@ Window {
 				
 	TextField{
 					id : sp_lon
-					x : 50
+					x : 60
 					y : 120
 					text : "107.803706"
 					width : 120
@@ -123,7 +122,7 @@ Window {
 						//anchors.horizontalCenter: parent.horizontalCenter
 						x : -50
 						y:10
-						text:"sp lon : "
+						text:"lon : "
 						color : "white"
 						font.family: "Cantora One"  // Set the font family
 						font.pixelSize: 15    // Set the font size
@@ -136,7 +135,7 @@ Window {
 			
 	Text {
                 
-                x: 0
+                x: 10
                 y: 220
                 width: 83
                 height: 21
@@ -152,7 +151,7 @@ Window {
 			
 	TextField{
 					id : wind_speed
-					x : 120
+					x : 90
 					y : 250
 					text : "1"
 					width : 120
@@ -171,7 +170,7 @@ Window {
 				
 	TextField{
 					id : wind_dir
-					x : 120
+					x : 90
 					y : 300
 					text :"90"
 					width : 120
@@ -188,131 +187,10 @@ Window {
 					}
 				}
 			
-		
-			
-	
-	Text {
-                
-                x: 0
-                y: 350
-                width: 83
-                height: 21
-                color: "white"
-                text: "Propeller Status :"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
 	
 	
 	
 	
-	Rectangle{
-		x : 0
-		y : 400
-		width : 250
-		height : 50
-		color : "transparent"
-		border.width : 3
-		border.color : "white"
-		
-		Text {
-                
-                x: 10
-                y: 10
-                color: "white"
-                text: "Propeller 1"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
-		
-	
-	}
-
-	Rectangle{
-		x : 0
-		y : 460
-		width : 250
-		height : 50
-		color : "transparent"
-		border.width : 3
-		border.color : "white"
-		
-		Text {
-                
-                x: 10
-                y: 10
-                color: "white"
-                text: "Propeller 2"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
-		
-	
-	}
-
-
-
-	Rectangle{
-		x : 0
-		y : 520
-		width : 250
-		height : 50
-		color : "transparent"
-		border.width : 3
-		border.color : "white"
-		
-		Text {
-                
-                x: 10
-                y: 10
-                color: "white"
-                text: "Propeller 3"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
-		
-	
-	}
-
-
-
-	Rectangle{
-		x : 0
-		y : 580
-		width : 250
-		height : 50
-		color : "transparent"
-		border.width : 3
-		border.color : "white"
-		
-		Text {
-                
-                x: 10
-                y: 10
-                color: "white"
-                text: "Propeller 4"
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignLeft
-                verticalAlignment: Text.AlignTop
-                font.family: "Verdana"
-                font.bold: true
-            }
-		
-	
-	}
-
 
 
 	
@@ -336,18 +214,352 @@ Window {
 
 }
 
+	Rectangle{
+		x : 525
+		color : "transparent"
+		border.width : 3
+		border.color : "white"
+		height : 530
+		width : 420
+		
+		Text {
+			anchors.horizontalCenter: parent.horizontalCenter
+			y : 10
+			width: 83
+			height: 21
+			color: "white"
+			text: "STATE SPACE REPRESENTATION"
+			font.pixelSize: 14
+			horizontalAlignment: Text.AlignHCenter
+			verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			font.bold: true
+		}
+		
+		
+		Image{
+			anchors.horizontalCenter: parent.horizontalCenter
+			y : 40
+			width : 200
+			height : 100
+			source : "state space.png"
+		
+		}
+		
+		
+		Text {
+			id : a
+			x : 10
+			y : 150
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
+		
+		Text {
+			id : b
+			x : 10
+			y : 300
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
+		
+		
+		Text {
+			id : c
+			x : 10
+			y : 380
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
+		
+		
+		Text {
+			id : x
+			x : 150
+			y : 380
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
+		
+		
+		Text {
+			id : u
+			x : 200
+			y : 380
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
+		
+	
+		
+		
+	}
 
-Rectangle {
+	Rectangle {
             id: map1
             x: 0
             y: 0
-            width: 500
-            height: 650
+            width: 520
+            height: 530
             color: "#958c8c"
             //radius: 6
             //border.color: "#6c6c6c"
             //border.width: 7
 			
+			
+				Rectangle{
+					x : 0
+					y : 540
+					width : 150
+					height : 150
+					color : "transparent"
+					border.width : 3
+					border.color : "white"
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							y: 10
+							color: "white"
+							text: "Propeller 1"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							font.bold: true
+						}
+					
+					Image{
+						anchors.horizontalCenter: parent.horizontalCenter
+						y : 20
+						width : 120
+						height : 100
+						source: "needlewhite.png"
+						transformOrigin: Item.Center
+						visible :true
+						
+						rotation: 180
+						scale: 1
+					}
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							y: 120
+							color: "white"
+							text: "properties"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							
+						}
+					
+					
+				
+				}
+
+				Rectangle{
+					x : 200
+					y : 540
+					width : 150
+					height : 150
+					color : "transparent"
+					border.width : 3
+					border.color : "white"
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							x: 10
+							y: 10
+							color: "white"
+							text: "Propeller 2"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							font.bold: true
+						}
+						
+						
+					Image{
+						anchors.horizontalCenter: parent.horizontalCenter
+						y : 20
+						width : 120
+						height : 100
+						source: "needlewhite.png"
+						transformOrigin: Item.Center
+						visible :true
+						
+						rotation: 180
+						scale: 1
+					}
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							y: 120
+							color: "white"
+							text: "properties"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							
+						}
+					
+					
+				
+				}
+
+
+
+				Rectangle{
+					x : 400
+					y : 540
+					width : 150
+					height : 150
+					color : "transparent"
+					border.width : 3
+					border.color : "white"
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							x: 10
+							y: 10
+							color: "white"
+							text: "Propeller 3"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							font.bold: true
+						}
+						
+					Image{
+						anchors.horizontalCenter: parent.horizontalCenter
+						y : 20
+						width : 120
+						height : 100
+						source: "needlewhite.png"
+						transformOrigin: Item.Center
+						visible :true
+						
+						rotation: 180
+						scale: 1
+					}
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							y: 120
+							color: "white"
+							text: "properties"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							
+						}
+					
+					
+				
+				}
+
+
+
+				Rectangle{
+					x : 600
+					y : 540
+					width : 150
+					height : 150
+					color : "transparent"
+					border.width : 3
+					border.color : "white"
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							x: 10
+							y: 10
+							color: "white"
+							text: "Propeller 4"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							font.bold: true
+						}
+						
+						
+					Image{
+						anchors.horizontalCenter: parent.horizontalCenter
+						y : 20
+						width : 120
+						height : 100
+						source: "needlewhite.png"
+						transformOrigin: Item.Center
+						visible :true
+						
+						rotation: 180
+						scale: 1
+					}
+					
+					Text {
+							anchors.horizontalCenter: parent.horizontalCenter
+							
+							y: 120
+							color: "white"
+							text: "properties"
+							font.pixelSize: 14
+							horizontalAlignment: Text.AlignLeft
+							verticalAlignment: Text.AlignTop
+							font.family: "Verdana"
+							
+						}
+					
+					
+				
+				}
+
+
 			
 			
 			
@@ -660,7 +872,11 @@ Timer{
 			latitude_position_value.text = backend.latitude()
 			longitude_position_value.text = backend.longitude()
 			marker.rotation = backend.yaw()
-			
+			a.text = "A = " + backend.A_ss()
+			b.text = "B = " + backend.B_ss()
+			c.text = "C = " + backend.C_ss()
+			x.text = "X = " + backend.x_ss()
+			u.text = "U = " + backend.u_ss()
 		}
 
 }
