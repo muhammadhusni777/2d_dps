@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtQuick import *  
 import sys
 from scipy.linalg import expm
+import math
 #----------------------------------------------------------------#
 
 import numpy as np
@@ -129,7 +130,8 @@ D = np.zeros((3, 3))
 x_next = np.array([[0], [0], [0], [0], [0], [0]])  
 
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
-U = np.array([[0.0001], [0], [0]])
+U = np.array([[0], [0.0001], [0]])
+y = np.array([[0], [0.0], [0]])
 
 
 print("A")
@@ -160,6 +162,24 @@ Dd = D
 
 print("Matriks A (diskrit):\n", Ad)
 print("Matriks B (diskrit):\n", Bd)
+
+# Matriks T untuk 4 baling-baling
+T = np.array([[1, 0, 1, 0, 1, 0, 1, 0],   # Menambah kolom untuk F_x4
+              [0, 1, 0, 1, 0, 1, 0, 1],   # Menambah kolom untuk F_y4
+              [-0.25, 1, -0.25, -1, 0.25, -1, 0.25, 1]])  # Menyesuaikan gaya kontrol
+#-ly1 lx1 -fy2 -fx2 fy3 -fx3 fy4 fx4
+
+T_transpose = T.T
+
+
+W = np.eye(8)
+W_inv = np.linalg.inv(W)
+
+TWT_inv = np.linalg.inv(T @ W_inv @ T_transpose)
+
+T_pseudo_inverse = W_inv @ T_transpose @ TWT_inv
+
+tau_control = np.array([0, 0, 10])
 
 
 
@@ -199,15 +219,67 @@ class table(QObject):
         global y
         dt = 1
         
-        V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
-        x_next = Ad @ x * dt + Bd @ U * dt + x
         
+        
+        x_next = Ad @ x * dt + Bd @ U * dt + x
         y = Cd @ x + Dd @ U
+        
+        print(y)
+        eta = y
+        
+        V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
+        
         
         latitude = latitude + V[0][0]
         longitude = longitude + V[1][0]
         yaw = V[2][0]
-        print(V)
+        
+        tau_control = U
+        
+        # Gaya yang harus diberikan oleh setiap thruster
+
+        f = T_pseudo_inverse @ tau_control
+        # Cetak hasil
+        print("Gaya yang harus dihasilkan oleh thruster:")
+        print("f genap fx, f ganjil fy")
+        print(f)
+
+
+        try:
+            steering1 = math.atan2(float(f[1]),float(f[0])) * 180/math.pi
+        except:
+            steering1 = 90
+            
+        gas_throttle1 = math.sqrt(float(f[1])**2 + float(f[0])**2)
+        print(f"Thruster 1 Allocation : steering 1 {steering1}, throttle 1: {gas_throttle1}")
+
+
+        try:
+            steering2 = math.atan2(float(f[3]),float(f[2])) * 180/math.pi
+        except:
+            steering2 = 90
+
+        gas_throttle2 = math.sqrt(float(f[3])**2 + float(f[2])**2)
+        print(f"Thruster 2 Allocation : steering 2 {steering2}, throttle 2: {gas_throttle2}")
+
+
+        try:
+            steering3 = math.atan2(float(f[5]),float(f[4])) * 180/math.pi
+        except:
+            steering3 = 90
+        gas_throttle3 = math.sqrt(float(f[5])**2 + float(f[4])**2)
+        print(f"Thruster 3 Allocation : steering 3 {steering3}, throttle 3: {gas_throttle3}")
+
+
+
+        try:
+            steering4 = math.atan2(float(f[7]),float(f[6])) * 180/math.pi
+        except:
+            steering4 = 90
+        gas_throttle4 = math.sqrt(float(f[7])**2 + float(f[6])**2)
+        print(f"Thruster 4 Allocation : steering 4 {steering4}, throttle 4: {gas_throttle4}")
+      
+        
         
         x = x_next
         
@@ -231,6 +303,9 @@ class table(QObject):
     
     @pyqtSlot(result=str)
     def u_ss(self):return str(U)
+    
+    @pyqtSlot(result=str)
+    def y_ss(self):return str(y)
     
     
 #----------------------------------------------------------------#

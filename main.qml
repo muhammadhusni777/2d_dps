@@ -376,6 +376,21 @@ Window {
 			
 		}
 		
+		
+		Text {
+			id : y
+			x : 10
+			y : 430
+			width: 83
+			height: 21
+			color: "white"
+			text: ""
+			font.pixelSize: 9
+			//horizontalAlignment: Text.AlignHCenter
+			//verticalAlignment: Text.AlignVCenter
+			font.family: "Verdana"
+			
+		}
 	
 	}
 		
@@ -937,6 +952,7 @@ Timer{
 			c.text = "C = " + backend.C_ss()
 			x.text = "X = " + backend.x_ss()
 			u.text = "U = " + backend.u_ss()
+			y.text = "Y = " + backend.y_ss()
 			
 			if (run.checked == true){
 				animate.running = true
