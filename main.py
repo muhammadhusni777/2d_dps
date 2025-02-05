@@ -22,22 +22,29 @@ latitude_dot = 0.00001
 longitude = 107.803706
 longitude_dot = 0.00001
 yaw = 90
-yaw_dot = 1
 
-x_dot = 0
-y_dot = 0
-theta_dot = 0
+
+x_dot = 0.00001
+y_dot = 0.0000
+theta_dot = 1
+
+eta = np.array([[x_dot], [y_dot], [yaw]])
+V = np.array([[latitude_dot], [longitude_dot], [yaw]]) 
+
 
 def rotation(x, y, theta):
-    j_theta = np.array([[np.cos(theta * float(np.pi/180)), -np.sin(theta * float(np.pi/180)), 0],
-              [np.sin(theta * float(np.pi/180)), np.cos(theta* float(np.pi/180)), 0],
-              [0, 0, 1]])
-    result = ((j_theta)@ np.array([[x],[y],[theta]]))
+    theta_rad = np.radians(theta)  # Konversi derajat ke radian
+    j_theta = np.array([[np.cos(theta_rad), -np.sin(theta_rad), 0],
+                        [np.sin(theta_rad),  np.cos(theta_rad), 0],
+                        [0, 0, 1]])
     
-    x_accent = result[1]
-    y_accent = result[0]
+    result = j_theta @ np.array([[x], [y], [0]])  # Gunakan 0 untuk rotasi biasa
 
-    return x_accent, y_accent
+    x_accent = result[0, 0]  # Mengambil nilai skalar dari array
+    y_accent = result[1, 0]
+    theta = theta
+
+    return x_accent, y_accent, theta
 
 
 def meter_conversion(lat1, long1, lat2, long2):
@@ -185,9 +192,13 @@ class table(QObject):
         global yaw
         global yaw_dot
         
-        latitude = latitude + latitude_dot
-        longitude = longitude + longitude_dot
-        yaw = yaw + yaw_dot
+        V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
+        
+        
+        latitude = latitude + V[0][0]
+        longitude = longitude + V[1][0]
+        yaw = V[2][0]
+        print(V)
         
     
     @pyqtSlot(result=float)

@@ -15,6 +15,16 @@ import QtQuick.Controls.Imagine 2.3
 import QtQuick.Controls.Material 2.0
 import QtQuick 2.7
 
+import QtQuick 2.12
+import QtQuick.Window 2.13
+import QtQuick.Controls 2.3
+import QtQuick.Controls.Styles 1.4
+import QtQuick.Extras 1.4
+import QtQuick.Extras.Private 1.0
+
+//import QtQuick.Window 2.2
+import QtQuick 2.9
+
 
 Window {
 	
@@ -34,6 +44,21 @@ Window {
 	property real sp_lat_val: -6.215861 // Variabel latitude
     property real sp_lon_val: 107.803706 // Variabel longitude
 
+	Text {
+		x : 1000
+		y : 680
+		width: 83
+		height: 21
+		color: "white"
+		text: "(c) SYERGIE 2025"
+		font.pixelSize: 14
+		horizontalAlignment: Text.AlignHCenter
+		verticalAlignment: Text.AlignVCenter
+		font.family: "Verdana"
+		font.bold: true
+	}
+
+
 
 	Rectangle{
 		x : 950
@@ -46,7 +71,7 @@ Window {
 	Button {
            
             x: 10
-            y: 170
+            y: 350
             text : "set"
 			width: 170
             //height: 31
@@ -123,6 +148,25 @@ Window {
 						x : -50
 						y:10
 						text:"lon : "
+						color : "white"
+						font.family: "Cantora One"  // Set the font family
+						font.pixelSize: 15    // Set the font size
+						font.bold: true 
+					}
+				}
+				
+	TextField{
+					id : sp_yaw
+					x : 60
+					y : 160
+					text : "0"
+					width : 120
+					
+					Text{
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : -50
+						y:10
+						text:"yaw : "
 						color : "white"
 						font.family: "Cantora One"  // Set the font family
 						font.pixelSize: 15    // Set the font size
@@ -222,6 +266,13 @@ Window {
 		height : 530
 		width : 420
 		
+		ScrollView {
+			anchors.fill: parent
+			clip: true
+			ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+			contentHeight: 1000
+			contentWidth: parent.width
+		
 		Text {
 			anchors.horizontalCenter: parent.horizontalCenter
 			y : 10
@@ -312,7 +363,7 @@ Window {
 		
 		Text {
 			id : u
-			x : 200
+			x : 300
 			y : 380
 			width: 83
 			height: 21
@@ -326,7 +377,7 @@ Window {
 		}
 		
 	
-		
+	}
 		
 	}
 
@@ -559,7 +610,16 @@ Window {
 				
 				}
 
-
+				Button{
+					id : run
+					x : 780
+					y : 540
+					width : 150
+					height : 150
+					checkable : true
+					text : "run simulation"
+					
+				}
 			
 			
 			
@@ -877,6 +937,16 @@ Timer{
 			c.text = "C = " + backend.C_ss()
 			x.text = "X = " + backend.x_ss()
 			u.text = "U = " + backend.u_ss()
+			
+			if (run.checked == true){
+				animate.running = true
+			
+			}
+			
+			if (run.checked == false){
+				animate.running = false
+			
+			}
 		}
 
 }
@@ -886,7 +956,7 @@ Timer{
 		id:animate
 		interval: 1000
 		repeat: true
-		running: true
+		running: false
 		onTriggered: {
 			backend.animate("tick")
 			
