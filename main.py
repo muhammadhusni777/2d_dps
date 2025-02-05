@@ -21,7 +21,7 @@ latitude = -6.215861
 latitude_dot = 0.00001
 longitude = 107.803706
 longitude_dot = 0.00001
-yaw = 90
+yaw = 190
 
 
 x_dot = 0.00001
@@ -126,6 +126,8 @@ C = np.block([
 ])
 D = np.zeros((3, 3))
 
+x_next = np.array([[0], [0], [0], [0], [0], [0]])  
+
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
 U = np.array([[0.0001], [0], [0]])
 
@@ -191,14 +193,23 @@ class table(QObject):
         global longitude_dot
         global yaw
         global yaw_dot
+        global V
+        global x
+        global x_next
+        global y
+        dt = 1
         
         V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
+        x_next = Ad @ x * dt + Bd @ U * dt + x
         
+        y = Cd @ x + Dd @ U
         
         latitude = latitude + V[0][0]
         longitude = longitude + V[1][0]
         yaw = V[2][0]
         print(V)
+        
+        x = x_next
         
     
     @pyqtSlot(result=float)
