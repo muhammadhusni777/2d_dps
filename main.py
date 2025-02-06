@@ -70,7 +70,7 @@ d = np.array([[0.2, 0.0, 0.1], [0.0, 0.3, 0.0], [0.1, 0.0, 0.4]])  # matriks ges
 print("==== Kinetik =======")
 xg = 0.5 #posisi x center of gravity
 yg = 0.4 #posisi y center of gravity
-m = 27 #massa kapal
+mass = 27 #massa kapal
 r = 0 #posisi arah surge / kecepatan sudut (psi_dot)
 Iz = 0 #momen inersia akibat percepatan sumbu y
 
@@ -92,32 +92,48 @@ r = 0
 
 #gaya akibat massa
 
-'''
-#dari thesis teguh
 
-m = np.array([[m, 0, -m*yg], [0, m, m*xg], [-m*yg, m*xg, Iz]])
+#dari thesis teguh
+'''
+m = np.array([[mass, 0, -mass*yg], [0, mass, mass*xg], [-mass*yg, mass*xg, Iz]])
 + np.array([[-x_udot,0,0],[0,-y_vdot,-y_rdot],[0,-n_vdot,-n_rdot]])
 print(m)
 '''
 #dari Thomas P. DeRensis
-m = np.array([[m, -0.003, 0.001], [0.002, m, m*xg], [-0.005, m*xg, Iz]])
-+ np.array([[-x_udot,-0.002,0.003],[-0.003,y_vdot,y_rdot],[-0.001,n_vdot,n_rdot]])
+m = np.array([[mass, -0, 0], [0.0, mass, mass*xg], [-0.00, mass*xg, Iz]])
++ np.array([[-x_udot,-0.00,0.00],[-0.00,y_vdot,y_rdot],[-0.00,n_vdot,n_rdot]])
 print(m)
 
+
+
+#gaya akibat coriolis
+c = np.array([ [0, 0, -mass * (xg*r + float(y_dot))],
+               [0, 0, -mass * (yg*r + float(x_dot))],
+               [-mass * (xg*r + float(y_dot)),-mass * (yg*r + float(x_dot)), 0]]) + np.array([[0,0,-y_vdot*float(y_dot) - ((y_rdot+n_vdot)/2)*r],
+            [0,0,x_udot*float(x_dot)],
+            [-y_vdot*float(y_dot) - ((y_rdot+n_vdot)/2)*r,x_udot*float(x_dot),0]])
+
 #gaya akibat drag
-d = np.array([[x_u,-0.004,-0.002],
-    [-0.003,y_v,y_r],
-    [-0.001,n_v,n_r]]) 
+d = np.array([[x_u,-0.00,-0.00],
+    [-0.00,y_v,y_r],
+    [-0.00,n_v,n_r]]) 
 
 print("d",d)
 
 
 
 # Matriks State-Space
+
 A = np.block([
     [np.zeros((3, 3)), np.eye(3)],
     [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
 ])
+'''
+A = np.block([
+    [np.zeros((3, 3)), np.eye(3)],
+    [-np.linalg.inv(m) @ d, -np.linalg.inv(m) @ c]
+])
+'''
 B = np.block([
     [np.zeros((3, 3))],
     [np.linalg.inv(m)]
@@ -127,10 +143,11 @@ C = np.block([
 ])
 D = np.zeros((3, 3))
 
-x_next = np.array([[0], [0], [0], [0], [0], [0]])  
+x_next = np.array([[0], [0], [0], [0], [0], [0]])
+x0 = np.array([[0], [0], [0], [0], [0], [0]])  
 
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
-U = np.array([[0], [0.0001], [0]])
+U = np.array([[0], [0], [0]])
 y = np.array([[0], [0.0], [0]])
 
 
@@ -217,12 +234,29 @@ class table(QObject):
         global x
         global x_next
         global y
+        
+        global steering1
+        global steering2
+        global steering3
+        global steering4
+        
+        global gas_throttle1
+        global gas_throttle2
+        global gas_throttle3
+        global gas_throttle4
+        global x0
+        global U
+        
+        
+        if (message == "1"):
+            U = np.array([[0], [0.0001], [0]])
+            
+        if (message == "0"):
+            U = np.array([[0], [0], [0]])
         dt = 1
         
-        
-        
-        x_next = Ad @ x * dt + Bd @ U * dt + x
-        y = Cd @ x + Dd @ U
+        x0 = Ad @ x0 * dt + Bd @ U * dt
+        y = Cd @ x0
         
         print(y)
         eta = y
@@ -230,9 +264,9 @@ class table(QObject):
         V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
         
         
-        latitude = latitude + V[0][0]
-        longitude = longitude + V[1][0]
-        yaw = V[2][0]
+        latitude = latitude + (V[0][0] / 111000)
+        longitude = longitude + (V[1][0] / 111000)
+        yaw =yaw + V[2][0]
         
         tau_control = U
         
@@ -281,8 +315,6 @@ class table(QObject):
       
         
         
-        x = x_next
-        
     
     @pyqtSlot(result=float)
     def yaw(self):return yaw
@@ -296,9 +328,8 @@ class table(QObject):
     @pyqtSlot(result=str)
     def C_ss(self):return str(Cd)
     
-    
     @pyqtSlot(result=str)
-    def x_ss(self):return str(x)
+    def x_ss(self):return str(x0)
     
     
     @pyqtSlot(result=str)

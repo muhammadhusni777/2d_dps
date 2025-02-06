@@ -5,8 +5,9 @@ import time
 
 plt.ion()  # Mode interaktif
 fig, ax = plt.subplots()
-x_data, y_data = [], []
+x_data, y_data, y2_data = [], [],[]
 line, = ax.plot([], [], 'b-')  # Garis biru
+line2, = ax.plot([], [], 'r-', label='Channel 2')  # Garis merah
 
 i = 0
 
@@ -147,13 +148,18 @@ while True:
     
     x_data.append(t)
     y_data.append(y[0, 0])  # Contoh data
+    y2_data.append( 5) 
 
     # Menjaga hanya 20 data terakhir
     x_data = x_data[-20:]
     y_data = y_data[-20:]
+    y2_data = y2_data[-20:]
+    
 
     line.set_xdata(x_data)
     line.set_ydata(y_data)
+    line2.set_xdata(x_data)
+    line2.set_ydata(y2_data)
     
     ax.set_xlim(min(x_data), max(x_data) if len(x_data) > 1 else 1)  # Update batas x
     ax.relim()

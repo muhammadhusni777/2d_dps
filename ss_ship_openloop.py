@@ -60,6 +60,7 @@ print("d",d)
 
 
 # Matriks State-Space
+
 A = np.block([
     [np.zeros((3, 3)), np.eye(3)],
     [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
@@ -68,9 +69,13 @@ B = np.block([
     [np.zeros((3, 3))],
     [np.linalg.inv(m)]
 ])
+
 C = np.block([
     [np.eye(3), np.zeros((3, 3))]
 ])
+
+
+
 D = np.zeros((3, 3))
 
 print("A")
@@ -106,7 +111,7 @@ print("Dd:\n", Dd)
 
 
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
-U = np.array([[0.0001], [0], [0]])
+U = np.array([[0], [0], [0.0001]])
 
 output_points_y1 = []
 output_points_y2 = []
@@ -125,6 +130,7 @@ while t <= t_end:
 
     # Hitung keadaan berikutnya: x(k+1) = A*x(k) + B*u(k)
     x_next = Ad @ x * dt + Bd @ U * dt + x
+    #print(x_next)
 
     # Hitung output: y(k) = C*x(k) + D*u(k)
     y = Cd @ x + Dd @ U

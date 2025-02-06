@@ -955,13 +955,14 @@ Timer{
 			y.text = "Y = " + backend.y_ss()
 			
 			if (run.checked == true){
-				animate.running = true
+				//animate.running = true
+				backend.animate("1")
 			
 			}
 			
 			if (run.checked == false){
-				animate.running = false
-			
+				//animate.running = false
+				backend.animate("0")
 			}
 		}
 
