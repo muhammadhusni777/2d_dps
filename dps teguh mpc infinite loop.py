@@ -70,12 +70,17 @@ print("d", d)
 # Matriks State-Space
 
 
+A = np.block([
+    [np.zeros((3, 3)), np.eye(3)],
+    [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
+])
+'''
 
 A = np.block([
     [np.zeros((3, 3)), np.eye(3)],
     [-np.linalg.inv(m) @ d, -np.linalg.inv(m) @ c]
 ])
-
+'''
 B = np.block([
     [np.zeros((3, 3))],
     [np.linalg.inv(m)]
@@ -145,7 +150,7 @@ y = np.array([[0], [0.0], [-1000]])
 
 print("=========================")
 while True:
-    y_ref = np.array([0, 5, 10]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
+    y_ref = np.array([10000, 12000, 9000]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
 
     # ===== Variabel Optimisasi =====
     x = cp.Variable((A.shape[0], N + 1))  # State variables
@@ -187,7 +192,7 @@ while True:
     applied_inputs.append(u_optimal)
     time_steps.append(i * 0.1)  # Assuming T = 0.1
 
-    print(f"Setpoint: {y_ref.flatten()}, Sensor: {y.flatten()}, Input: {u_optimal}")
+    print(f"Setpoint: {y_ref.flatten()}, Sensor: {y.flatten()}, Input: {u_optimal.reshape(-1, 1)}")
     
     x_data.append(i)
     y1_data.append(y.flatten()[0])  # Data untuk channel 1

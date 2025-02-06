@@ -8,6 +8,7 @@ from PyQt5.QtQml import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtQuick import *  
 import sys
+import cvxpy as cp
 from scipy.linalg import expm
 import math
 #----------------------------------------------------------------#
@@ -144,7 +145,7 @@ C = np.block([
 D = np.zeros((3, 3))
 
 x_next = np.array([[0], [0], [0], [0], [0], [0]])
-x0 = np.array([[0], [0], [0], [0], [0], [0]])  
+ 
 
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
 U = np.array([[0], [0], [0]])
@@ -187,17 +188,27 @@ T = np.array([[1, 0, 1, 0, 1, 0, 1, 0],   # Menambah kolom untuk F_x4
 #-ly1 lx1 -fy2 -fx2 fy3 -fx3 fy4 fx4
 
 T_transpose = T.T
-
-
 W = np.eye(8)
 W_inv = np.linalg.inv(W)
-
 TWT_inv = np.linalg.inv(T @ W_inv @ T_transpose)
-
 T_pseudo_inverse = W_inv @ T_transpose @ TWT_inv
-
 tau_control = np.array([0, 0, 10])
 
+# ===== Parameter MPC =====
+N = 10  # Prediction horizon
+#Q =  10000
+Q = np.diag([10, 10, 10])  # Penalty for output error (adjusted for 3 outputs)
+R = np.diag([0.1, 0.1, 0.1])  # Penalty for control effort (adjusted for 3 inputs)
+delta_u_penalty = np.diag([10, 10, 10])  # Penalti perubahan kontrol (adjusted for 3 inputs)
+u_min, u_max = -1000.0, 1000.0  # Batas kontrol
+
+# ===== Variabel Simulasi =====
+x0 = np.array([[latitude], [longitude], [yaw], [0], [0], [0]])   # Status awal
+print("x0 =", x0)
+predicted_states = []
+applied_inputs = []
+time_steps = []
+y = np.array([[0], [0.0], [-1000]])
 
 
 ########## mengisi class table dengan instruksi pyqt5#############
@@ -247,26 +258,58 @@ class table(QObject):
         global x0
         global U
         
+        y_ref = np.array([0, 1000, 900]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
+
+        # ===== Variabel Optimisasi =====
+        x = cp.Variable((A.shape[0], N + 1))  # State variables
+        u = cp.Variable((B.shape[1], N))  # Control inputs
+        
+        # ===== Fungsi Biaya dan Kendala =====
+        cost = 0
+        constraints = []
+
+        for k in range(N):
+            cost += cp.quad_form(C @ x[:, k] - y_ref.flatten(), Q)  # Penalti error (gunakan y_ref yang sudah direshape)
+            cost += cp.quad_form(u[:, k], R)  # Penalti kontrol
+            if k > 0:
+                cost += cp.quad_form(u[:, k] - u[:, k - 1], delta_u_penalty)  # Penalti perubahan kontrol
+            constraints += [x[:, k + 1] == A @ x[:, k] + B @ u[:, k]]
+            constraints += [u_min <= u[:, k], u[:, k] <= u_max]
+
+        # Status awal
+        constraints += [x[:, 0] == x0.flatten()]
+
+        # Problem MPC
+        problem = cp.Problem(cp.Minimize(cost), constraints)
+        problem.solve()
+
+        # ===== Ambil Kontrol Optimal =====
+        if problem.status != 'optimal':
+            print(f"Solver failed at step {i}. Status: {problem.status}")
+            
+
+        u_optimal = u.value[:, 0]
+
         
         if (message == "1"):
             U = np.array([[0], [0.0001], [0]])
             
         if (message == "0"):
             U = np.array([[0], [0], [0]])
-        dt = 1
         
-        x0 = Ad @ x0 * dt + Bd @ U * dt
+        
+        x0 = Ad @ x0 + Bd @ U 
         y = Cd @ x0
         
-        print(y)
-        eta = y
+        #print(y)
+        #eta = y
         
-        V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
+        #V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
         
         
-        latitude = latitude + (V[0][0] / 111000)
-        longitude = longitude + (V[1][0] / 111000)
-        yaw =yaw + V[2][0]
+        latitude = y[0][0]
+        longitude = y[1][0]
+        yaw = y[2][0]
         
         tau_control = U
         
@@ -274,9 +317,9 @@ class table(QObject):
 
         f = T_pseudo_inverse @ tau_control
         # Cetak hasil
-        print("Gaya yang harus dihasilkan oleh thruster:")
-        print("f genap fx, f ganjil fy")
-        print(f)
+        #print("Gaya yang harus dihasilkan oleh thruster:")
+        #print("f genap fx, f ganjil fy")
+        #print(f)
 
 
         try:
@@ -285,7 +328,7 @@ class table(QObject):
             steering1 = 90
             
         gas_throttle1 = math.sqrt(float(f[1])**2 + float(f[0])**2)
-        print(f"Thruster 1 Allocation : steering 1 {steering1}, throttle 1: {gas_throttle1}")
+        #print(f"Thruster 1 Allocation : steering 1 {steering1}, throttle 1: {gas_throttle1}")
 
 
         try:
@@ -294,7 +337,7 @@ class table(QObject):
             steering2 = 90
 
         gas_throttle2 = math.sqrt(float(f[3])**2 + float(f[2])**2)
-        print(f"Thruster 2 Allocation : steering 2 {steering2}, throttle 2: {gas_throttle2}")
+        #print(f"Thruster 2 Allocation : steering 2 {steering2}, throttle 2: {gas_throttle2}")
 
 
         try:
@@ -302,7 +345,7 @@ class table(QObject):
         except:
             steering3 = 90
         gas_throttle3 = math.sqrt(float(f[5])**2 + float(f[4])**2)
-        print(f"Thruster 3 Allocation : steering 3 {steering3}, throttle 3: {gas_throttle3}")
+        #print(f"Thruster 3 Allocation : steering 3 {steering3}, throttle 3: {gas_throttle3}")
 
 
 
@@ -311,7 +354,7 @@ class table(QObject):
         except:
             steering4 = 90
         gas_throttle4 = math.sqrt(float(f[7])**2 + float(f[6])**2)
-        print(f"Thruster 4 Allocation : steering 4 {steering4}, throttle 4: {gas_throttle4}")
+        #print(f"Thruster 4 Allocation : steering 4 {steering4}, throttle 4: {gas_throttle4}")
       
         
         
