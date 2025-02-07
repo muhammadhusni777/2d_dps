@@ -68,10 +68,27 @@ Window {
 		height : 650
 		width : 250
 
+	Text {
+                id : starting_point
+                x: 10
+                y: 350
+                width: 83
+                height: 21
+                color: "white"
+                text: "starting point :"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignLeft
+                verticalAlignment: Text.AlignTop
+                font.family: "Verdana"
+                font.bold: true
+            }
+
+
+
 	Button {
            
             x: 10
-            y: 350
+            y: 400
             text : "set"
 			width: 170
             //height: 31
@@ -81,7 +98,9 @@ Window {
 		   onClicked:{
 						sp_lat_val = sp_lat.text
 						sp_lon_val = sp_lon.text
-
+						
+						backend.setpoint(sp_lat.text, sp_lon.text, sp_yaw.text)
+						starting_point.text = sp_lat.text+","+sp_lon.text+","+sp_yaw.text
 					
 					}
 			
@@ -301,7 +320,7 @@ Window {
 		Text {
 			id : a
 			x : 10
-			y : 150
+			y : 200
 			width: 83
 			height: 21
 			color: "white"
@@ -431,6 +450,7 @@ Window {
 						}
 					
 					Image{
+						id : azimuth1
 						anchors.horizontalCenter: parent.horizontalCenter
 						y : 20
 						width : 120
@@ -445,7 +465,7 @@ Window {
 					
 					Text {
 							anchors.horizontalCenter: parent.horizontalCenter
-							
+							id : properties1
 							y: 120
 							color: "white"
 							text: "properties"
@@ -485,6 +505,7 @@ Window {
 						
 						
 					Image{
+						id : azimuth2
 						anchors.horizontalCenter: parent.horizontalCenter
 						y : 20
 						width : 120
@@ -499,7 +520,7 @@ Window {
 					
 					Text {
 							anchors.horizontalCenter: parent.horizontalCenter
-							
+							id : properties2
 							y: 120
 							color: "white"
 							text: "properties"
@@ -540,6 +561,7 @@ Window {
 						}
 						
 					Image{
+						id : azimuth3
 						anchors.horizontalCenter: parent.horizontalCenter
 						y : 20
 						width : 120
@@ -554,7 +576,7 @@ Window {
 					
 					Text {
 							anchors.horizontalCenter: parent.horizontalCenter
-							
+							id : properties3
 							y: 120
 							color: "white"
 							text: "properties"
@@ -596,6 +618,7 @@ Window {
 						
 						
 					Image{
+						id : azimuth4
 						anchors.horizontalCenter: parent.horizontalCenter
 						y : 20
 						width : 120
@@ -610,7 +633,7 @@ Window {
 					
 					Text {
 							anchors.horizontalCenter: parent.horizontalCenter
-							
+							id : properties4
 							y: 120
 							color: "white"
 							text: "properties"
@@ -953,6 +976,17 @@ Timer{
 			x.text = "X = " + backend.x_ss()
 			u.text = "U = " + backend.u_ss()
 			y.text = "Y = " + backend.y_ss()
+			
+			properties1.text = backend.steering1() + "° / " + backend.gas_throttle1() + " N"
+			properties2.text = backend.steering2() + "° / " + backend.gas_throttle2() + " N"
+			properties3.text = backend.steering3() + "° / " + backend.gas_throttle3() + " N"
+			properties4.text = backend.steering4() + "° / " + backend.gas_throttle4() + " N"
+			
+			azimuth1.rotation = backend.steering1()
+			azimuth2.rotation = backend.steering2()
+			azimuth3.rotation = backend.steering3()
+			azimuth4.rotation = backend.steering4()
+			
 			
 			if (run.checked == true){
 				//animate.running = true

@@ -33,6 +33,17 @@ theta_dot = 1
 eta = np.array([[x_dot], [y_dot], [yaw]])
 V = np.array([[latitude_dot], [longitude_dot], [yaw]]) 
 
+heading_error = 0
+
+steering1 = 0
+steering2 = 0
+steering3 = 0
+steering4 = 0
+
+gas_throttle1 = 0
+gas_throttle2 = 0
+gas_throttle3 = 0
+gas_throttle4 = 0
 
 def rotation(x, y, theta):
     theta_rad = np.radians(theta)  # Konversi derajat ke radian
@@ -55,6 +66,14 @@ def meter_conversion(lat1, long1, lat2, long2):
     distance = sqrt(pow(delta_lat, 2) +  pow(delta_lon, 2))
     return distance
 
+
+def shortest_psi(psi_ref, psi_d):
+    psi_temp = (psi_ref-psi_d)%360
+    psi_shortest = (psi_temp + 360) *-1 %360 
+    if (psi_shortest > 180):
+        psi_shortest = psi_shortest - 360
+    return psi_shortest   
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import lti, lsim
@@ -71,7 +90,7 @@ d = np.array([[0.2, 0.0, 0.1], [0.0, 0.3, 0.0], [0.1, 0.0, 0.4]])  # matriks ges
 print("==== Kinetik =======")
 xg = 0.5 #posisi x center of gravity
 yg = 0.4 #posisi y center of gravity
-mass = 27 #massa kapal
+mass = 1000 #massa kapal
 r = 0 #posisi arah surge / kecepatan sudut (psi_dot)
 Iz = 0 #momen inersia akibat percepatan sumbu y
 
@@ -124,17 +143,18 @@ print("d",d)
 
 
 # Matriks State-Space
-
-A = np.block([
-    [np.zeros((3, 3)), np.eye(3)],
-    [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
-])
 '''
 A = np.block([
     [np.zeros((3, 3)), np.eye(3)],
     [-np.linalg.inv(m) @ d, -np.linalg.inv(m) @ c]
 ])
 '''
+
+A = np.block([
+    [np.zeros((3, 3)), np.eye(3)],
+    [np.zeros((3, 3)), -np.linalg.inv(m) @ d]
+])
+
 B = np.block([
     [np.zeros((3, 3))],
     [np.linalg.inv(m)]
@@ -148,7 +168,7 @@ x_next = np.array([[0], [0], [0], [0], [0], [0]])
  
 
 x = np.array([[0], [0], [0], [0], [0], [0]]) 
-U = np.array([[0], [0], [0]])
+u_optimal = np.array([[0], [0], [0]])
 y = np.array([[0], [0.0], [0]])
 
 
@@ -171,15 +191,13 @@ I = np.eye(A.shape[0])
 T = 1
 
 # Menghitung Ad dan Bd dengan Tustin
-Ad = np.linalg.inv(I - (T/2) * A) @ (I + (T/2) * A)
-Bd = np.linalg.inv(I - (T/2) * A) @ (T * B)
+A = np.linalg.inv(I - (T/2) * A) @ (I + (T/2) * A)
+B = np.linalg.inv(I - (T/2) * A) @ (T * B)
 
 # Cd dan Dd tetap sama
-Cd = C
-Dd = D
+C = C
+D = D
 
-print("Matriks A (diskrit):\n", Ad)
-print("Matriks B (diskrit):\n", Bd)
 
 # Matriks T untuk 4 baling-baling
 T = np.array([[1, 0, 1, 0, 1, 0, 1, 0],   # Menambah kolom untuk F_x4
@@ -209,7 +227,13 @@ predicted_states = []
 applied_inputs = []
 time_steps = []
 y = np.array([[0], [0.0], [-1000]])
+y_ref = np.array([10, 0, 10]).reshape(-1, 1)
 
+heading_error = 0
+
+sp_lat = 0
+sp_lon = 0
+sp_yaw = 0
 
 ########## mengisi class table dengan instruksi pyqt5#############
 #----------------------------------------------------------------#
@@ -228,9 +252,73 @@ class table(QObject):
     @pyqtSlot(result=float)
     def longitude(self):return round(longitude,7)
     
-    @pyqtSlot(str)
-    def state_space_run(self, message):
-        pass
+    
+    @pyqtSlot(result=float)
+    def steering1(self):return round(steering1)
+    
+    @pyqtSlot(result=float)
+    def steering2(self):return round(steering2)
+    
+    @pyqtSlot(result=float)
+    def steering3(self):return round(steering3)
+    
+    @pyqtSlot(result=float)
+    def steering4(self):return round(steering4)
+    
+    
+    
+    @pyqtSlot(result=float)
+    def gas_throttle1(self):return round(gas_throttle1)
+    
+    @pyqtSlot(result=float)
+    def gas_throttle2(self):return round(gas_throttle2)
+    
+    @pyqtSlot(result=float)
+    def gas_throttle3(self):return round(gas_throttle3)
+    
+    @pyqtSlot(result=float)
+    def gas_throttle4(self):return round(gas_throttle4)
+    
+    
+    @pyqtSlot(str, str, str)
+    def setpoint(self, message1, message2, message3):
+        global sp_lat
+        global sp_lon
+        global sp_yaw
+        global y_ref
+        
+        sp_lat = float(message1)
+        sp_lon = float(message2)
+        sp_yaw = float(message3)
+        
+        j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
+              [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
+              [0, 0, 1]])
+        
+        
+        
+        
+        '''
+        try:
+            n_error = round(meter_conversion(val_latitude, 0, float(rpl_lat[0]), 0),2)
+            e_error = round(meter_conversion(val_longitude, 0, float(rpl_long[0]), 0),2)
+        except:
+            n_error = 0
+            e_error = 0
+            
+
+        error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[psi_error]])
+        x_error = abs(round(float(error_body_fixed[0]),1))
+        y_error = abs(round(float(error_body_fixed[1]),1))
+        
+        
+        
+        
+        '''
+        y_ref = np.array([0, 0, sp_yaw]).reshape(-1, 1)
+        
+        
+        print(sp_lat, sp_lon, sp_yaw)
     
     
     @pyqtSlot(str)
@@ -245,6 +333,7 @@ class table(QObject):
         global x
         global x_next
         global y
+        global y_ref
         
         global steering1
         global steering2
@@ -257,13 +346,15 @@ class table(QObject):
         global gas_throttle4
         global x0
         global U
+        global heading_error
+        global u_optimal
         
-        y_ref = np.array([0, 1000, 900]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
+        #y_ref = np.array([10, 0, 10]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
 
         # ===== Variabel Optimisasi =====
         x = cp.Variable((A.shape[0], N + 1))  # State variables
         u = cp.Variable((B.shape[1], N))  # Control inputs
-        
+
         # ===== Fungsi Biaya dan Kendala =====
         cost = 0
         constraints = []
@@ -290,28 +381,28 @@ class table(QObject):
 
         u_optimal = u.value[:, 0]
 
+        # ===== Simulasikan Sistem =====
+        x0 = A @ x0 + B @ u_optimal.reshape(-1, 1)
+        #x0 = A @ x0 + B @ np.array([[0.0001], [0], [0]])
+        y = C @ x0
+
+        # Simpan Hasil
+        predicted_states.append(y.flatten())
+        applied_inputs.append(u_optimal)
         
-        if (message == "1"):
-            U = np.array([[0], [0.0001], [0]])
-            
-        if (message == "0"):
-            U = np.array([[0], [0], [0]])
-        
-        
-        x0 = Ad @ x0 + Bd @ U 
-        y = Cd @ x0
-        
+        #print(f"Setpoint: {y_ref.flatten()}, Sensor: {y.flatten()}, Input: {u_optimal.reshape(-1, 1)}")
+        print(f"Setpoint: {y_ref.flatten()}, Sensor: {np.round(y.flatten(), decimals=2)}, Input: {np.round(u_optimal, decimals=2)}")
         #print(y)
         #eta = y
         
         #V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
         
         
-        latitude = y[0][0]
-        longitude = y[1][0]
+        #latitude = y[0][0]
+        #longitude = y[1][0]
         yaw = y[2][0]
         
-        tau_control = U
+        tau_control = u_optimal
         
         # Gaya yang harus diberikan oleh setiap thruster
 
@@ -363,23 +454,23 @@ class table(QObject):
     def yaw(self):return yaw
     
     @pyqtSlot(result=str)
-    def A_ss(self):return str(Ad)
+    def A_ss(self):return str(np.round(A, decimals=4))
     
     @pyqtSlot(result=str)
-    def B_ss(self):return str(Bd)
+    def B_ss(self):return str(B)
     
     @pyqtSlot(result=str)
-    def C_ss(self):return str(Cd)
+    def C_ss(self):return str(C)
     
     @pyqtSlot(result=str)
-    def x_ss(self):return str(x0)
-    
-    
-    @pyqtSlot(result=str)
-    def u_ss(self):return str(U)
+    def x_ss(self):return str(np.round(x0, decimals=2))
+    #np.round(y.flatten(), decimals=2)
     
     @pyqtSlot(result=str)
-    def y_ss(self):return str(y)
+    def u_ss(self):return str(np.round(u_optimal.reshape(-1, 1), decimals=4))
+    
+    @pyqtSlot(result=str)
+    def y_ss(self):return str(np.round(y, decimals=3))
     
     
 #----------------------------------------------------------------#

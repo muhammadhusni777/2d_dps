@@ -149,8 +149,10 @@ time_steps = []
 y = np.array([[0], [0.0], [-1000]])
 
 print("=========================")
+
+
 while True:
-    y_ref = np.array([10000, 12000, 9000]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
+    y_ref = np.array([10, 0, 0]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
 
     # ===== Variabel Optimisasi =====
     x = cp.Variable((A.shape[0], N + 1))  # State variables
