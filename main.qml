@@ -975,7 +975,7 @@ Timer{
 			c.text = "C = " + backend.C_ss()
 			x.text = "X = " + backend.x_ss()
 			u.text = "U = " + backend.u_ss()
-			y.text = "Y = " + backend.y_ss()
+			y.text = "Y = " + backend.y_ss() + "\nY_ref = " + backend.yref_ss()
 			
 			properties1.text = backend.steering1() + "° / " + backend.gas_throttle1() + " N"
 			properties2.text = backend.steering2() + "° / " + backend.gas_throttle2() + " N"

@@ -23,15 +23,27 @@ latitude = -6.215861
 latitude_dot = 0.00001
 longitude = 107.803706
 longitude_dot = 0.00001
-yaw = 190
+yaw = 0
 
 
-x_dot = 0.00001
-y_dot = 0.0000
+delta_lat = 0
+delta_lon = 0
+sp_lat = -6.215861
+sp_lon = 107.803706
+sp_yaw = 0
+
+delta_x = 0.00001
+delta_y = 0.0000
 theta_dot = 1
 
+x_dot = 0
+y_dot = 0
 eta = np.array([[x_dot], [y_dot], [yaw]])
 V = np.array([[latitude_dot], [longitude_dot], [yaw]]) 
+
+x_target = 0
+y_target = 0
+
 
 heading_error = 0
 
@@ -45,11 +57,24 @@ gas_throttle2 = 0
 gas_throttle3 = 0
 gas_throttle4 = 0
 
+def coordinate_conv(x, y, theta):
+    j_theta = np.array([[np.cos(theta * float(np.pi/180)), -np.sin(theta * float(np.pi/180)), 0],
+              [np.sin(theta * float(np.pi/180)), np.cos(theta* float(np.pi/180)), 0],
+              [0, 0, 1]])
+    
+    result = j_theta @ np.array([[x/111000], [y/111000], [0]])  # Gunakan 0 untuk rotasi biasa
+
+    delta_lat = result[0, 0]  # Mengambil nilai skalar dari array
+    delta_lon = result[1, 0]
+
+    return delta_lat, delta_lon
+
+
+
 def rotation(x, y, theta):
-    theta_rad = np.radians(theta)  # Konversi derajat ke radian
-    j_theta = np.array([[np.cos(theta_rad), -np.sin(theta_rad), 0],
-                        [np.sin(theta_rad),  np.cos(theta_rad), 0],
-                        [0, 0, 1]])
+    j_theta = np.array([[np.cos(theta * float(np.pi/180)), -np.sin(theta * float(np.pi/180)), 0],
+              [np.sin(theta * float(np.pi/180)), np.cos(theta* float(np.pi/180)), 0],
+              [0, 0, 1]])
     
     result = j_theta @ np.array([[x], [y], [0]])  # Gunakan 0 untuk rotasi biasa
 
@@ -77,20 +102,15 @@ def shortest_psi(psi_ref, psi_d):
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import lti, lsim
+from math import sin, cos, sqrt, atan2, radians, atan
 
-# Parameter sistem
-'''
-m = np.array([[2.0, 0.1, 0.2], [0.1, 2.5, 0.3], [0.2, 0.3, 3.0]])  # matriks massa (3x3)
-c = np.array([[0.5, 0.1, 0.0], [0.1, 0.6, 0.2], [0.0, 0.2, 0.7]])  # matriks redaman (3x3)
-d = np.array([[0.2, 0.0, 0.1], [0.0, 0.3, 0.0], [0.1, 0.0, 0.4]])  # matriks gesekan (3x3)
-'''
 
 ############ Model Kinetik ################################
 
 print("==== Kinetik =======")
 xg = 0.5 #posisi x center of gravity
 yg = 0.4 #posisi y center of gravity
-mass = 1000 #massa kapal
+mass = 27 #massa kapal
 r = 0 #posisi arah surge / kecepatan sudut (psi_dot)
 Iz = 0 #momen inersia akibat percepatan sumbu y
 
@@ -108,6 +128,12 @@ n_rdot = 0.4
 u = 0
 v = 0
 r = 0
+
+j_theta = np.array([[0,0,0],[0,0,0],[0,0,0]])
+v = np.array([[0],[0],[0]])
+n_error = 0
+e_error = 0
+error_body_fixed = np.array([[0],[0],[0]])
 
 
 #gaya akibat massa
@@ -215,25 +241,23 @@ tau_control = np.array([0, 0, 10])
 # ===== Parameter MPC =====
 N = 10  # Prediction horizon
 #Q =  10000
-Q = np.diag([10, 10, 10])  # Penalty for output error (adjusted for 3 outputs)
-R = np.diag([0.1, 0.1, 0.1])  # Penalty for control effort (adjusted for 3 inputs)
+Q = np.diag([10000, 10000, 10000])  # Penalty for output error (adjusted for 3 outputs)
+R = np.diag([1, 1, 1])  # Penalty for control effort (adjusted for 3 inputs)
 delta_u_penalty = np.diag([10, 10, 10])  # Penalti perubahan kontrol (adjusted for 3 inputs)
-u_min, u_max = -1000.0, 1000.0  # Batas kontrol
+u_min, u_max = -5, 5  # Batas kontrol
 
 # ===== Variabel Simulasi =====
-x0 = np.array([[latitude], [longitude], [yaw], [0], [0], [0]])   # Status awal
+x0 = np.array([[0], [0], [yaw], [0], [0], [0]])   # Status awal
 print("x0 =", x0)
 predicted_states = []
 applied_inputs = []
 time_steps = []
-y = np.array([[0], [0.0], [-1000]])
-y_ref = np.array([10, 0, 10]).reshape(-1, 1)
+y = np.array([[0], [0.0], [0]])
+y_ref = np.array([0, 0, 10]).reshape(-1, 1)
 
 heading_error = 0
 
-sp_lat = 0
-sp_lon = 0
-sp_yaw = 0
+
 
 ########## mengisi class table dengan instruksi pyqt5#############
 #----------------------------------------------------------------#
@@ -291,31 +315,6 @@ class table(QObject):
         sp_lon = float(message2)
         sp_yaw = float(message3)
         
-        j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
-              [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
-              [0, 0, 1]])
-        
-        
-        
-        
-        '''
-        try:
-            n_error = round(meter_conversion(val_latitude, 0, float(rpl_lat[0]), 0),2)
-            e_error = round(meter_conversion(val_longitude, 0, float(rpl_long[0]), 0),2)
-        except:
-            n_error = 0
-            e_error = 0
-            
-
-        error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[psi_error]])
-        x_error = abs(round(float(error_body_fixed[0]),1))
-        y_error = abs(round(float(error_body_fixed[1]),1))
-        
-        
-        
-        
-        '''
-        y_ref = np.array([0, 0, sp_yaw]).reshape(-1, 1)
         
         
         print(sp_lat, sp_lon, sp_yaw)
@@ -349,8 +348,43 @@ class table(QObject):
         global heading_error
         global u_optimal
         
-        #y_ref = np.array([10, 0, 10]).reshape(-1, 1)  # Reshape untuk dimensi (3, 1)
+        global n_error
+        
+        global latitude_now 
+        global longitude_now
+        
+        global x_target
+        global y_target
+        
+        #  # Reshape untuk dimensi (3, 1)
 
+        #kalkulasi setpoint
+        
+        
+        j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
+              [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
+              [0, 0, 1]])
+                
+        try:
+            n_error = round(meter_conversion(latitude, 0, float(sp_lat), 0))
+            e_error = round(meter_conversion(longitude, 0, float(sp_lon), 0))
+        except:
+            n_error = 0
+            e_error = 0
+            
+
+        error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[yaw]])
+        x_error = abs(round(float(error_body_fixed[0]),1))
+        y_error = abs(round(float(error_body_fixed[1]),1))
+        
+        y_ref = np.array([x_error, y_error, sp_yaw]).reshape(-1, 1)
+        
+        #print(f"lat: {latitude}, long: {longitude}, sp_lat: {sp_lat}, sp_lon: {sp_lon}")
+        #print(f"x : {y[0][0]}, y: {y[1][0]}")
+        print(f"n error: {n_error}, e error: {e_error}; x error: {x_error}, y error: {y_error}")
+        
+        #y_ref = np.array([10, -20, sp_yaw]).reshape(-1, 1)
+        
         # ===== Variabel Optimisasi =====
         x = cp.Variable((A.shape[0], N + 1))  # State variables
         u = cp.Variable((B.shape[1], N))  # Control inputs
@@ -376,7 +410,7 @@ class table(QObject):
 
         # ===== Ambil Kontrol Optimal =====
         if problem.status != 'optimal':
-            print(f"Solver failed at step {i}. Status: {problem.status}")
+            print(f"Solver failed at step. Status: {problem.status}")
             
 
         u_optimal = u.value[:, 0]
@@ -390,16 +424,14 @@ class table(QObject):
         predicted_states.append(y.flatten())
         applied_inputs.append(u_optimal)
         
-        #print(f"Setpoint: {y_ref.flatten()}, Sensor: {y.flatten()}, Input: {u_optimal.reshape(-1, 1)}")
-        print(f"Setpoint: {y_ref.flatten()}, Sensor: {np.round(y.flatten(), decimals=2)}, Input: {np.round(u_optimal, decimals=2)}")
-        #print(y)
-        #eta = y
         
-        #V[0][0], V[1][0], V[2][0] = rotation(eta[0][0], eta[1][0],eta[2][0])
+        delta_x = y[0][0]
+        delta_y = y[1][0]
         
-        
-        #latitude = y[0][0]
-        #longitude = y[1][0]
+        delta_lat, delta_lon = coordinate_conv(delta_x, delta_y, yaw) 
+        #print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
+        latitude = latitude 
+        longitude = longitude 
         yaw = y[2][0]
         
         tau_control = u_optimal
@@ -407,10 +439,7 @@ class table(QObject):
         # Gaya yang harus diberikan oleh setiap thruster
 
         f = T_pseudo_inverse @ tau_control
-        # Cetak hasil
-        #print("Gaya yang harus dihasilkan oleh thruster:")
-        #print("f genap fx, f ganjil fy")
-        #print(f)
+
 
 
         try:
@@ -419,7 +448,6 @@ class table(QObject):
             steering1 = 90
             
         gas_throttle1 = math.sqrt(float(f[1])**2 + float(f[0])**2)
-        #print(f"Thruster 1 Allocation : steering 1 {steering1}, throttle 1: {gas_throttle1}")
 
 
         try:
@@ -428,16 +456,12 @@ class table(QObject):
             steering2 = 90
 
         gas_throttle2 = math.sqrt(float(f[3])**2 + float(f[2])**2)
-        #print(f"Thruster 2 Allocation : steering 2 {steering2}, throttle 2: {gas_throttle2}")
-
 
         try:
             steering3 = math.atan2(float(f[5]),float(f[4])) * 180/math.pi
         except:
             steering3 = 90
         gas_throttle3 = math.sqrt(float(f[5])**2 + float(f[4])**2)
-        #print(f"Thruster 3 Allocation : steering 3 {steering3}, throttle 3: {gas_throttle3}")
-
 
 
         try:
@@ -445,8 +469,6 @@ class table(QObject):
         except:
             steering4 = 90
         gas_throttle4 = math.sqrt(float(f[7])**2 + float(f[6])**2)
-        #print(f"Thruster 4 Allocation : steering 4 {steering4}, throttle 4: {gas_throttle4}")
-      
         
         
     
@@ -471,6 +493,10 @@ class table(QObject):
     
     @pyqtSlot(result=str)
     def y_ss(self):return str(np.round(y, decimals=3))
+    
+    
+    @pyqtSlot(result=str)
+    def yref_ss(self):return str(np.round(y_ref, decimals=3))
     
     
 #----------------------------------------------------------------#
