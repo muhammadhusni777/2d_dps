@@ -310,8 +310,8 @@ Window {
 		Image{
 			anchors.horizontalCenter: parent.horizontalCenter
 			y : 40
-			width : 200
-			height : 100
+			width : 300
+			height : 150
 			source : "state space.png"
 		
 		}

@@ -19,6 +19,10 @@ pubdelay = 2 #delay publish to all wind and engine box
 counter = 0
 
 
+
+start_lat = -6.215861
+start_lon = 107.803706
+
 latitude = -6.215861
 latitude_dot = 0.00001
 longitude = 107.803706
@@ -320,11 +324,15 @@ class table(QObject):
         global sp_yaw
         global y_ref
         
+        global start_lat
+        global start_lon
+        
         sp_lat = float(message1)
         sp_lon = float(message2)
         sp_yaw = float(message3)
         
-        
+        start_lat = latitude
+        start_lon = longitude
         
         
         j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
@@ -388,6 +396,9 @@ class table(QObject):
         global x_target
         global y_target
         
+        global start_lat
+        global start_lon
+        
         #  # Reshape untuk dimensi (3, 1)
 
         #kalkulasi setpoint
@@ -439,9 +450,11 @@ class table(QObject):
         constraints += [x[:, 0] == x0.flatten()]
 
         # Problem MPC
-        problem = cp.Problem(cp.Minimize(cost), constraints)
-        problem.solve()
-
+        try:
+            problem = cp.Problem(cp.Minimize(cost), constraints)
+            problem.solve()
+        except:
+            pass
         # ===== Ambil Kontrol Optimal =====
         if problem.status != 'optimal':
             print(f"Solver failed at step. Status: {problem.status}")
@@ -464,8 +477,9 @@ class table(QObject):
         
         delta_lat, delta_lon = coordinate_conv(delta_x, delta_y, yaw) 
         print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
-        latitude_now = latitude + (delta_lat/11100000)
-        longitude_now = longitude + (delta_lon/111100000)
+        
+        latitude = start_lat + (delta_lat/111000)
+        longitude = start_lon + (delta_lon/111000)
         yaw = y[2][0]
         
         tau_control = u_optimal
