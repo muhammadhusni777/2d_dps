@@ -62,7 +62,7 @@ def coordinate_conv(x, y, theta):
               [np.sin(theta * float(np.pi/180)), np.cos(theta* float(np.pi/180)), 0],
               [0, 0, 1]])
     
-    result = j_theta @ np.array([[x/111000], [y/111000], [0]])  # Gunakan 0 untuk rotasi biasa
+    result = j_theta @ np.array([[x], [y], [0]])  # Gunakan 0 untuk rotasi biasa
 
     delta_lat = result[0, 0]  # Mengambil nilai skalar dari array
     delta_lon = result[1, 0]
@@ -84,12 +84,16 @@ def rotation(x, y, theta):
 
     return x_accent, y_accent, theta
 
-
+'''
 def meter_conversion(lat1, long1, lat2, long2):
     delta_lat = (lat1 - lat2)*111000
     delta_lon = (long1 - long2)*111000
     distance = sqrt(pow(delta_lat, 2) +  pow(delta_lon, 2))
     return distance
+'''
+
+def meter_conversion(coord1, coord1_alt, coord2, coord2_alt):
+    return (coord2 - coord1) * 111000  # Faktor konversi kasar: 1 derajat ≈ 111.139 km
 
 
 def shortest_psi(psi_ref, psi_d):
@@ -97,7 +101,10 @@ def shortest_psi(psi_ref, psi_d):
     psi_shortest = (psi_temp + 360) *-1 %360 
     if (psi_shortest > 180):
         psi_shortest = psi_shortest - 360
-    return psi_shortest   
+    return psi_shortest
+
+
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -110,7 +117,7 @@ from math import sin, cos, sqrt, atan2, radians, atan
 print("==== Kinetik =======")
 xg = 0.5 #posisi x center of gravity
 yg = 0.4 #posisi y center of gravity
-mass = 27 #massa kapal
+mass = 1000 #massa kapal
 r = 0 #posisi arah surge / kecepatan sudut (psi_dot)
 Iz = 0 #momen inersia akibat percepatan sumbu y
 
@@ -135,6 +142,8 @@ n_error = 0
 e_error = 0
 error_body_fixed = np.array([[0],[0],[0]])
 
+x_error = 0
+y_error = 0
 
 #gaya akibat massa
 
@@ -244,7 +253,7 @@ N = 10  # Prediction horizon
 Q = np.diag([10000, 10000, 10000])  # Penalty for output error (adjusted for 3 outputs)
 R = np.diag([1, 1, 1])  # Penalty for control effort (adjusted for 3 inputs)
 delta_u_penalty = np.diag([10, 10, 10])  # Penalti perubahan kontrol (adjusted for 3 inputs)
-u_min, u_max = -5, 5  # Batas kontrol
+u_min, u_max = -50, 50  # Batas kontrol
 
 # ===== Variabel Simulasi =====
 x0 = np.array([[0], [0], [yaw], [0], [0], [0]])   # Status awal
@@ -292,16 +301,16 @@ class table(QObject):
     
     
     @pyqtSlot(result=float)
-    def gas_throttle1(self):return round(gas_throttle1)
+    def gas_throttle1(self):return round(gas_throttle1,3)
     
     @pyqtSlot(result=float)
-    def gas_throttle2(self):return round(gas_throttle2)
+    def gas_throttle2(self):return round(gas_throttle2,3)
     
     @pyqtSlot(result=float)
-    def gas_throttle3(self):return round(gas_throttle3)
+    def gas_throttle3(self):return round(gas_throttle3,3)
     
     @pyqtSlot(result=float)
-    def gas_throttle4(self):return round(gas_throttle4)
+    def gas_throttle4(self):return round(gas_throttle4,3)
     
     
     @pyqtSlot(str, str, str)
@@ -314,6 +323,29 @@ class table(QObject):
         sp_lat = float(message1)
         sp_lon = float(message2)
         sp_yaw = float(message3)
+        
+        
+        
+        
+        j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
+              [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
+              [0, 0, 1]])
+                
+        try:
+            n_error = round(meter_conversion(latitude, 0, float(sp_lat), 0))
+            e_error = round(meter_conversion(longitude, 0, float(sp_lon), 0))
+        except:
+            n_error = 0
+            e_error = 0
+            
+
+        #error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[yaw]])
+        error_body_fixed = j_theta.T @ np.array([[n_error], [e_error], [yaw]])  # Gunakan .T
+
+        x_error = (round(float(error_body_fixed[0]),1))
+        y_error = (round(float(error_body_fixed[1]),1))
+        
+        y_ref = np.array([x_error, y_error, sp_yaw]).reshape(-1, 1)
         
         
         
@@ -359,7 +391,7 @@ class table(QObject):
         #  # Reshape untuk dimensi (3, 1)
 
         #kalkulasi setpoint
-        
+        '''
         
         j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
               [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
@@ -373,15 +405,17 @@ class table(QObject):
             e_error = 0
             
 
-        error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[yaw]])
-        x_error = abs(round(float(error_body_fixed[0]),1))
-        y_error = abs(round(float(error_body_fixed[1]),1))
+        #error_body_fixed = np.linalg.inv(j_theta) @ np.array([[n_error],[e_error],[yaw]])
+        error_body_fixed = j_theta.T @ np.array([[n_error], [e_error], [yaw]])  # Gunakan .T
+
+        x_error = (round(float(error_body_fixed[0]),1))
+        y_error = (round(float(error_body_fixed[1]),1))
         
         y_ref = np.array([x_error, y_error, sp_yaw]).reshape(-1, 1)
-        
+        '''
         #print(f"lat: {latitude}, long: {longitude}, sp_lat: {sp_lat}, sp_lon: {sp_lon}")
         #print(f"x : {y[0][0]}, y: {y[1][0]}")
-        print(f"n error: {n_error}, e error: {e_error}; x error: {x_error}, y error: {y_error}")
+        #print(f"n error: {n_error}, e error: {e_error}; x error: {x_error}, y error: {y_error}")
         
         #y_ref = np.array([10, -20, sp_yaw]).reshape(-1, 1)
         
@@ -429,9 +463,9 @@ class table(QObject):
         delta_y = y[1][0]
         
         delta_lat, delta_lon = coordinate_conv(delta_x, delta_y, yaw) 
-        #print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
-        latitude = latitude 
-        longitude = longitude 
+        print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
+        latitude_now = latitude + (delta_lat/11100000)
+        longitude_now = longitude + (delta_lon/111100000)
         yaw = y[2][0]
         
         tau_control = u_optimal
