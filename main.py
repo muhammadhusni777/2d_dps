@@ -14,6 +14,8 @@ import math
 #----------------------------------------------------------------#
 
 import numpy as np
+from filterpy.kalman import KalmanFilter
+
 
 pubdelay = 2 #delay publish to all wind and engine box
 counter = 0
@@ -210,7 +212,7 @@ x = np.array([[0], [0], [0], [0], [0], [0]])
 u_optimal = np.array([[0], [0], [0]])
 y = np.array([[0], [0.0], [0]])
 
-
+print("Continous state space : ")
 print("A")
 print(str(A))
 
@@ -236,6 +238,21 @@ B = np.linalg.inv(I - (T/2) * A) @ (T * B)
 # Cd dan Dd tetap sama
 C = C
 D = D
+
+
+print("Discrete state space : ")
+print("A")
+print(str(A))
+
+print("B")
+print(B)
+
+print("C")
+print(C)
+
+
+print("D")
+print(D)
 
 
 # Matriks T untuk 4 baling-baling
@@ -270,8 +287,23 @@ y_ref = np.array([0, 0, 10]).reshape(-1, 1)
 
 heading_error = 0
 
+# VARIABEL KALMAN FILTER
+dim_x = 6  
+dim_z = 3
 
+kf = KalmanFilter(dim_x=dim_x, dim_z=dim_z)
 
+kf.F = A
+kf.B = B
+kf.H = C
+
+kf.Q = np.eye(dim_x) * 1e-4  # Noise proses
+kf.R = np.array([[0.1]])  # Noise pengukuran
+kf.P = np.eye(dim_x) * 1.0  # Kovariansi awal
+
+kf.x = x
+
+print("kalman filter succesfully defined ... ")
 ########## mengisi class table dengan instruksi pyqt5#############
 #----------------------------------------------------------------#
 class table(QObject):    
@@ -323,9 +355,17 @@ class table(QObject):
         global sp_lon
         global sp_yaw
         global y_ref
+        global latitude
+        global longitude
         
         global start_lat
         global start_lon
+        
+        global delta_lat
+        global delta_lon
+        
+        delta_lat = 0
+        delta_lon = 0
         
         sp_lat = float(message1)
         sp_lon = float(message2)
@@ -333,8 +373,8 @@ class table(QObject):
         
         start_lat = latitude
         start_lon = longitude
-        
-        
+        #latitude = start_lat
+        #longitude = start_lon
         j_theta = np.array([[np.cos(yaw * float(np.pi/180)), -np.sin(yaw * float(np.pi/180)), 0],
               [np.sin(yaw * float(np.pi/180)), np.cos(yaw* float(np.pi/180)), 0],
               [0, 0, 1]])
@@ -459,13 +499,19 @@ class table(QObject):
         if problem.status != 'optimal':
             print(f"Solver failed at step. Status: {problem.status}")
             
-
-        u_optimal = u.value[:, 0]
-
+        try:
+            u_optimal = u.value[:, 0]
+        except:
+            pass
         # ===== Simulasikan Sistem =====
         x0 = A @ x0 + B @ u_optimal.reshape(-1, 1)
         #x0 = A @ x0 + B @ np.array([[0.0001], [0], [0]])
         y = C @ x0
+
+        #Kalman filter
+        kf.predict(u= u)  # Prediksi dengan sinyal kendali
+        kf.update(y)  # Update dengan data sensor
+        #print(f"Estimasi theta: {kf.x[0, 0]:.2f}, omega: {kf.x[1, 0]:.2f}")
 
         # Simpan Hasil
         predicted_states.append(y.flatten())
@@ -488,6 +534,23 @@ class table(QObject):
 
         f = T_pseudo_inverse @ tau_control
 
+            #####################
+            #==2==         ==1==#
+            #                   #
+            #                   #
+            #                   # -----------> Thruster Orientation
+            #                   #
+            #                   #
+            #                   #
+            #==4==         ==3==#
+            #####################
+            #new vs old
+            # 1 > 1
+            # 2 > 3
+            # 3 > 4
+            # 4 > 2
+            
+
 
 
         try:
@@ -499,24 +562,24 @@ class table(QObject):
 
 
         try:
-            steering2 = math.atan2(float(f[3]),float(f[2])) * 180/math.pi
-        except:
-            steering2 = 90
-
-        gas_throttle2 = math.sqrt(float(f[3])**2 + float(f[2])**2)
-
-        try:
-            steering3 = math.atan2(float(f[5]),float(f[4])) * 180/math.pi
+            steering3 = math.atan2(float(f[3]),float(f[2])) * 180/math.pi
         except:
             steering3 = 90
-        gas_throttle3 = math.sqrt(float(f[5])**2 + float(f[4])**2)
+
+        gas_throttle3 = math.sqrt(float(f[3])**2 + float(f[2])**2)
+
+        try:
+            steering4 = math.atan2(float(f[5]),float(f[4])) * 180/math.pi
+        except:
+            steering4 = 90
+        gas_throttle4 = math.sqrt(float(f[5])**2 + float(f[4])**2)
 
 
         try:
-            steering4 = math.atan2(float(f[7]),float(f[6])) * 180/math.pi
+            steering2 = math.atan2(float(f[7]),float(f[6])) * 180/math.pi
         except:
-            steering4 = 90
-        gas_throttle4 = math.sqrt(float(f[7])**2 + float(f[6])**2)
+            steering2 = 90
+        gas_throttle2 = math.sqrt(float(f[7])**2 + float(f[6])**2)
         
         
     

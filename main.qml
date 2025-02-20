@@ -428,17 +428,17 @@ Window {
 			
 			
 				Rectangle{
-					x : 0
+					x : 300
 					y : 540
-					width : 150
-					height : 150
+					width : 200
+					height : 75
 					color : "transparent"
 					border.width : 3
 					border.color : "white"
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
-							
+							//anchors.horizontalCenter: parent.horizontalCenter
+							x:80
 							y: 10
 							color: "white"
 							text: "Propeller 1"
@@ -451,10 +451,11 @@ Window {
 					
 					Image{
 						id : azimuth1
-						anchors.horizontalCenter: parent.horizontalCenter
-						y : 20
-						width : 120
-						height : 100
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x: 0
+						y : 0
+						width : 100
+						height : 80
 						source: "needlewhite.png"
 						transformOrigin: Item.Center
 						visible :true
@@ -464,9 +465,10 @@ Window {
 					}
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
+							x:80
 							id : properties1
-							y: 120
+							y: 50
 							color: "white"
 							text: "properties"
 							font.pixelSize: 14
@@ -481,18 +483,18 @@ Window {
 				}
 
 				Rectangle{
-					x : 200
-					y : 540
-					width : 150
-					height : 150
+					x : 300
+					y : 610
+					width : 200
+					height : 75
 					color : "transparent"
 					border.width : 3
 					border.color : "white"
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
 							
-							x: 10
+							x: 80
 							y: 10
 							color: "white"
 							text: "Propeller 2"
@@ -506,10 +508,11 @@ Window {
 						
 					Image{
 						id : azimuth2
-						anchors.horizontalCenter: parent.horizontalCenter
-						y : 20
-						width : 120
-						height : 100
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : 0
+						y : 0
+						width : 100
+						height : 80
 						source: "needlewhite.png"
 						transformOrigin: Item.Center
 						visible :true
@@ -519,9 +522,10 @@ Window {
 					}
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
 							id : properties2
-							y: 120
+							x : 80
+							y: 50
 							color: "white"
 							text: "properties"
 							font.pixelSize: 14
@@ -538,17 +542,16 @@ Window {
 
 
 				Rectangle{
-					x : 400
-					y : 540
-					width : 150
-					height : 150
+					x : 10
+					y : 610
+					width : 200
+					height : 75
 					color : "transparent"
 					border.width : 3
 					border.color : "white"
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
-							
+							//anchors.horizontalCenter: parent.horizontalCenter
 							x: 10
 							y: 10
 							color: "white"
@@ -562,10 +565,11 @@ Window {
 						
 					Image{
 						id : azimuth3
-						anchors.horizontalCenter: parent.horizontalCenter
-						y : 20
-						width : 120
-						height : 100
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : 120
+						y : 0
+						width : 100
+						height : 80
 						source: "needlewhite.png"
 						transformOrigin: Item.Center
 						visible :true
@@ -575,9 +579,10 @@ Window {
 					}
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
+							x : 10
 							id : properties3
-							y: 120
+							y: 50
 							color: "white"
 							text: "properties"
 							font.pixelSize: 14
@@ -594,16 +599,16 @@ Window {
 
 
 				Rectangle{
-					x : 600
+					x : 10
 					y : 540
-					width : 150
-					height : 150
+					width : 200
+					height : 75
 					color : "transparent"
 					border.width : 3
 					border.color : "white"
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
 							
 							x: 10
 							y: 10
@@ -619,10 +624,11 @@ Window {
 						
 					Image{
 						id : azimuth4
-						anchors.horizontalCenter: parent.horizontalCenter
-						y : 20
-						width : 120
-						height : 100
+						//anchors.horizontalCenter: parent.horizontalCenter
+						x : 120
+						//y : 20
+						width : 100
+						height : 80
 						source: "needlewhite.png"
 						transformOrigin: Item.Center
 						visible :true
@@ -632,9 +638,10 @@ Window {
 					}
 					
 					Text {
-							anchors.horizontalCenter: parent.horizontalCenter
+							//anchors.horizontalCenter: parent.horizontalCenter
 							id : properties4
-							y: 120
+							x :10
+							y: 50
 							color: "white"
 							text: "properties"
 							font.pixelSize: 14
