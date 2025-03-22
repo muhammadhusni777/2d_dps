@@ -428,9 +428,16 @@ Window {
             //border.color: "#6c6c6c"
             //border.width: 7
 			
+				Image {
+					x : 10
+					y : 540
+					width : 300
+					height : 150
+					source : "thruster allocation.png"
+				}
 			
 				Rectangle{
-					x : 300
+					x : 700
 					y : 540
 					width : 200
 					height : 75
@@ -485,7 +492,7 @@ Window {
 				}
 
 				Rectangle{
-					x : 300
+					x : 700
 					y : 610
 					width : 200
 					height : 75
@@ -544,7 +551,7 @@ Window {
 
 
 				Rectangle{
-					x : 10
+					x : 480
 					y : 610
 					width : 200
 					height : 75
@@ -601,7 +608,7 @@ Window {
 
 
 				Rectangle{
-					x : 10
+					x : 480
 					y : 540
 					width : 200
 					height : 75
@@ -665,6 +672,7 @@ Window {
 					height : 150
 					checkable : true
 					text : "run simulation"
+					visible : false
 					
 				}
 			
