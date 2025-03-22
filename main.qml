@@ -81,6 +81,7 @@ Window {
                 verticalAlignment: Text.AlignTop
                 font.family: "Verdana"
                 font.bold: true
+				visible : true
             }
 
 
@@ -100,7 +101,7 @@ Window {
 						sp_lon_val = sp_lon.text
 						
 						backend.setpoint(sp_lat.text, sp_lon.text, sp_yaw.text)
-						starting_point.text = sp_lat.text+","+sp_lon.text+","+sp_yaw.text
+						//starting_point.text = sp_lat.text+","+sp_lon.text+","+sp_yaw.text
 					
 					}
 			
@@ -325,6 +326,7 @@ Window {
 			height: 21
 			color: "white"
 			text: ""
+			
 			font.pixelSize: 9
 			//horizontalAlignment: Text.AlignHCenter
 			//verticalAlignment: Text.AlignVCenter
@@ -994,7 +996,7 @@ Timer{
 			azimuth3.rotation = backend.steering3()
 			azimuth4.rotation = backend.steering4()
 			
-			
+			starting_point.text = backend.start_lat() + " " + backend.start_lon() + "\n" + backend.delta_lat() + " " + backend.delta_lon() 
 			if (run.checked == true){
 				//animate.running = true
 				backend.animate("1")

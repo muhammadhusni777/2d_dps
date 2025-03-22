@@ -298,10 +298,12 @@ kf.B = B
 kf.H = C
 
 kf.Q = np.eye(dim_x) * 1e-4  # Noise proses
-kf.R = np.array([[0.1]])  # Noise pengukuran
+kf.R = np.diag([0.1, 0.1, 0.1])  # Noise pengukuran
 kf.P = np.eye(dim_x) * 1.0  # Kovariansi awal
 
 kf.x = x
+
+
 
 print("kalman filter succesfully defined ... ")
 ########## mengisi class table dengan instruksi pyqt5#############
@@ -320,6 +322,20 @@ class table(QObject):
     
     @pyqtSlot(result=float)
     def longitude(self):return round(longitude,7)
+    
+    @pyqtSlot(result=float)
+    def start_lat(self):return round(start_lat,7)
+    
+    @pyqtSlot(result=float)
+    def start_lon(self):return round(start_lon,7)
+    
+    
+    @pyqtSlot(result=float)
+    def delta_lat(self):return round(delta_lat)
+    
+    @pyqtSlot(result=float)
+    def delta_lon(self):return round(delta_lon)
+    
     
     
     @pyqtSlot(result=float)
@@ -363,6 +379,9 @@ class table(QObject):
         
         global delta_lat
         global delta_lon
+        global yaw
+        global y
+        global x0
         
         delta_lat = 0
         delta_lon = 0
@@ -393,11 +412,13 @@ class table(QObject):
         x_error = (round(float(error_body_fixed[0]),1))
         y_error = (round(float(error_body_fixed[1]),1))
         
+        
+        x0[0:2] = 0 
         y_ref = np.array([x_error, y_error, sp_yaw]).reshape(-1, 1)
         
         
         
-        print(sp_lat, sp_lon, sp_yaw)
+        print(start_lat, start_lon, sp_yaw)
     
     
     @pyqtSlot(str)
@@ -410,6 +431,7 @@ class table(QObject):
         global yaw_dot
         global V
         global x
+        global x0
         global x_next
         global y
         global y_ref
@@ -438,6 +460,9 @@ class table(QObject):
         
         global start_lat
         global start_lon
+        
+        global delta_lat
+        global delta_lon
         
         #  # Reshape untuk dimensi (3, 1)
 
@@ -507,9 +532,10 @@ class table(QObject):
         x0 = A @ x0 + B @ u_optimal.reshape(-1, 1)
         #x0 = A @ x0 + B @ np.array([[0.0001], [0], [0]])
         y = C @ x0
+        print(x0)
 
         #Kalman filter
-        kf.predict(u= u)  # Prediksi dengan sinyal kendali
+        kf.predict(u= u_optimal.reshape(-1, 1))  # Prediksi dengan sinyal kendali
         kf.update(y)  # Update dengan data sensor
         #print(f"Estimasi theta: {kf.x[0, 0]:.2f}, omega: {kf.x[1, 0]:.2f}")
 
@@ -522,7 +548,7 @@ class table(QObject):
         delta_y = y[1][0]
         
         delta_lat, delta_lon = coordinate_conv(delta_x, delta_y, yaw) 
-        print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
+        #print(f"d_lat : {delta_lat}, d_lon: {delta_lon}")
         
         latitude = start_lat + (delta_lat/111000)
         longitude = start_lon + (delta_lon/111000)
